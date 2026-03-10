@@ -283,14 +283,22 @@ const enemies = {
                 e.y = canvas.height - this.radius;
             }
 
-            // Colisão com os tiros
+            // Colisão com os tiros (Usando AABB Simples - Rect vs Rect)
             let killed = false;
+            let enemyLeft = e.x;
+            let enemyRight = e.x + (this.radius * 2);
+            let enemyTop = e.y;
+            let enemyBottom = e.y + (this.radius * 2);
+
             for (let j = 0; j < projectiles.items.length; j++) {
                 let p = projectiles.items[j];
-                let distX = Math.abs(e.x - p.x - projectiles.width / 2);
-                let distY = Math.abs(e.y - p.y - projectiles.height / 2);
+                let projLeft = p.x;
+                let projRight = p.x + projectiles.width;
+                let projTop = p.y;
+                let projBottom = p.y + projectiles.height;
 
-                if (distX <= (projectiles.width / 2 + this.radius) && distY <= (projectiles.height / 2 + this.radius)) {
+                // Checagem se um quadro está em cima do outro
+                if (projRight >= enemyLeft && projLeft <= enemyRight && projBottom >= enemyTop && projTop <= enemyBottom) {
                     projectiles.items.splice(j, 1); // Destrói o tiro
                     e.hp--; // Diminui HP do inimigo
                     
