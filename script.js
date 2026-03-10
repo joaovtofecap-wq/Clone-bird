@@ -15,6 +15,7 @@ let currentState = STATE_START;
 let frames = 0;
 let score = 0;
 let lives = 3;
+let speedMultiplier = 1; // Multiplicador base inicial
 let animationId;
 
 // Objeto Passarinho
@@ -116,8 +117,8 @@ const pipes = {
     },
 
     update() {
-        // Adiciona um novo cano a cada 100 frames
-        if (frames % 100 === 0) {
+        // Adiciona um novo cano a cada 100 frames (com ajuste de spawn na velocidade nova)
+        if (frames % Math.max(40, Math.floor(100 / speedMultiplier)) === 0) {
             this.items.push({
                 x: canvas.width,
                 top: Math.random() * (canvas.height - this.gap - 120) + 60,
@@ -127,7 +128,7 @@ const pipes = {
 
         for (let i = 0; i < this.items.length; i++) {
             let p = this.items[i];
-            p.x -= this.dx;
+            p.x -= this.dx * speedMultiplier;
 
             // Detecção de colisão (AABB)
             if (bird.x + bird.width > p.x && bird.x < p.x + this.width &&
@@ -140,6 +141,9 @@ const pipes = {
                 score++;
                 scoreDisplay.innerText = score;
                 p.passed = true;
+                
+                // Aumenta a velocidade a cada 20 pontos
+                speedMultiplier = 1 + Math.floor(score / 20) * 0.2; // Aumenta 20% da velocidade a cada 20 pts
             }
 
             // Remove canos que saíram da tela
@@ -226,8 +230,8 @@ const enemies = {
     },
 
     update() {
-        // Gera novos inimigos a cada 150 frames
-        if (frames % 150 === 0) {
+        // Gera novos inimigos mais frequentemente conforme a velocidade aumenta
+        if (frames % Math.max(60, Math.floor(150 / speedMultiplier)) === 0) {
             this.items.push({
                 x: canvas.width + 20,
                 y: Math.random() * (canvas.height - 100) + 50
@@ -236,7 +240,7 @@ const enemies = {
 
         for (let i = 0; i < this.items.length; i++) {
             let e = this.items[i];
-            e.x -= e.speed;
+            e.x -= e.speed * speedMultiplier;
 
             // Colisão com os tiros
             let killed = false;
@@ -332,6 +336,7 @@ function startGame() {
     enemies.reset();
     score = 0;
     lives = 3;
+    speedMultiplier = 1;
     frames = 0;
     scoreDisplay.innerText = score;
     livesDisplay.innerText = `Vidas: ${lives}`;
