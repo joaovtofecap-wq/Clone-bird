@@ -259,7 +259,8 @@ const enemies = {
                 this.items.push({
                     x: canvas.width + 20,
                     y: bird.y, // Nasce sempre na exata altura que o passarinho está
-                    hp: 1 // Morre com 1 tiro
+                    hp: 1, // Morre com 1 tiro
+                    speed: this.speed // Define a velocidade inicial
                 });
                 this.enemyTimer = 0; // Reseta o timer
             }
