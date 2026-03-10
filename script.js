@@ -300,17 +300,22 @@ const enemies = {
                 // Checagem se um quadro está em cima do outro
                 if (projRight >= enemyLeft && projLeft <= enemyRight && projBottom >= enemyTop && projTop <= enemyBottom) {
                     projectiles.items.splice(j, 1); // Destrói o tiro
+                    j--; // Ajusta o index do loop de tiros pra não pular nenhum
                     e.hp--; // Diminui HP do inimigo
                     
                     if (e.hp <= 0) {
-                        this.items.splice(i, 1); // Destrói inimigo
-                        i--;
                         killed = true;
                     }
-                    break;
+                    break; // Sai do loop de tiros, esse inimigo já tomou o hit
                 }
             }
-            if (killed) continue;
+            
+            // Se o inimigo foi morto pelo tiro, destrói e pula pro próximo inimigo
+            if (killed) {
+                this.items.splice(i, 1);
+                i--;
+                continue;
+            }
 
             // Colisão com o pássaro
             let distX = Math.abs((e.x + this.radius) - (bird.x + bird.radius));
