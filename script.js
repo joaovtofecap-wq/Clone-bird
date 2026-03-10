@@ -246,20 +246,22 @@ const enemies = {
         }
     },
 
-    lastEnemyFrame: null,
+    enemyTimer: 0,
     
     update() {
         // Gera novos inimigos apenas se a pontuação for maior ou igual a 10
         if (score >= 10) {
             let spawnDelay = Math.max(60, Math.floor(150 / speedMultiplier));
             
-            if (this.lastEnemyFrame === null || frames - this.lastEnemyFrame >= spawnDelay) {
+            this.enemyTimer++;
+            
+            if (this.enemyTimer >= spawnDelay) {
                 this.items.push({
                     x: canvas.width + 20,
                     y: bird.y, // Nasce sempre na exata altura que o passarinho está
                     hp: 1 // Morre com 1 tiro
                 });
-                this.lastEnemyFrame = frames;
+                this.enemyTimer = 0; // Reseta o timer
             }
         }
 
@@ -329,7 +331,7 @@ const enemies = {
 
     reset() {
         this.items = [];
-        this.lastEnemyFrame = null;
+        this.enemyTimer = 0;
     }
 };
 
