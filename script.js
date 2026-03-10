@@ -251,7 +251,7 @@ const enemies = {
             if (frames % Math.max(60, Math.floor(150 / speedMultiplier)) === 0) {
                 this.items.push({
                     x: canvas.width + 20,
-                    y: Math.random() * (canvas.height - 100) + 50,
+                    y: bird.y, // Nasce sempre na exata altura que o passarinho está
                     hp: 1 // Morre com 1 tiro
                 });
             }
