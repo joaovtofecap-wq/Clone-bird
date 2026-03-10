@@ -203,29 +203,40 @@ const projectiles = {
 // Objeto Inimigos
 const enemies = {
     items: [],
-    radius: 12,
+    radius: 15, // Mesmo tamanho do player
     speed: 4,
 
     draw() {
         for (let i = 0; i < this.items.length; i++) {
             let e = this.items[i];
-            ctx.fillStyle = '#e74c3c'; // Pássaro Inimigo Vermelho
+            
+            // Corpo do Pássaro Inimigo (igual ao player mas vermelho e virado pro outro lado)
+            ctx.fillStyle = '#e74c3c'; // Vermelho
             ctx.beginPath();
-            ctx.arc(e.x, e.y, this.radius, 0, Math.PI * 2);
+            ctx.arc(e.x + this.radius, e.y + this.radius, this.radius, 0, Math.PI * 2);
             ctx.fill();
-            ctx.strokeStyle = '#000';
+            ctx.strokeStyle = '#000'; // Borda
             ctx.lineWidth = 2;
             ctx.stroke();
-
-            // Olho
+            
+            // Olho (virado para a esquerda)
             ctx.fillStyle = '#fff';
             ctx.beginPath();
-            ctx.arc(e.x - 4, e.y - 4, 4, 0, Math.PI * 2);
+            ctx.arc(e.x + this.radius - 6, e.y + this.radius - 5, 5, 0, Math.PI * 2);
             ctx.fill();
-            ctx.fillStyle = '#000';
+            ctx.fillStyle = '#eb2f06'; // Pupila vermelha pra dar aparência de mau
             ctx.beginPath();
-            ctx.arc(e.x - 5, e.y - 4, 2, 0, Math.PI * 2);
+            ctx.arc(e.x + this.radius - 7, e.y + this.radius - 5, 2.5, 0, Math.PI * 2);
             ctx.fill();
+
+            // Bico (virado para a esquerda)
+            ctx.fillStyle = '#e67e22';
+            ctx.beginPath();
+            ctx.moveTo(e.x + this.radius - 10, e.y + this.radius);
+            ctx.lineTo(e.x + this.radius - 20, e.y + this.radius + 5);
+            ctx.lineTo(e.x + this.radius - 10, e.y + this.radius + 10);
+            ctx.fill();
+            ctx.stroke();
         }
     },
 
@@ -241,6 +252,13 @@ const enemies = {
         for (let i = 0; i < this.items.length; i++) {
             let e = this.items[i];
             e.x -= e.speed * speedMultiplier;
+            
+            // Perseguir o jogador no eixo Y
+            if (e.y < bird.y) {
+                e.y += 1.5; // Vai descendo
+            } else if (e.y > bird.y) {
+                e.y -= 1.5; // Vai subindo
+            }
 
             // Colisão com os tiros
             let killed = false;
@@ -260,11 +278,12 @@ const enemies = {
             if (killed) continue;
 
             // Colisão com o pássaro
-            let distX = Math.abs(e.x - (bird.x + bird.radius));
-            let distY = Math.abs(e.y - (bird.y + bird.radius));
+            let distX = Math.abs((e.x + this.radius) - (bird.x + bird.radius));
+            let distY = Math.abs((e.y + this.radius) - (bird.y + bird.radius));
             let distance = Math.sqrt(distX * distX + distY * distY);
 
-            if (distance < bird.radius + this.radius) {
+            // Reduzi o raio de colisão só por segurança pra não ser injusto
+            if (distance < bird.radius + this.radius - 5) {
                 lives--;
                 livesDisplay.innerText = `Vidas: ${lives}`;
                 this.items.splice(i, 1);
@@ -276,7 +295,7 @@ const enemies = {
             }
 
             // Remove inimigos fora da tela
-            if (e.x + this.radius < -10) {
+            if (e.x + (this.radius * 2) < -10) {
                 this.items.splice(i, 1);
                 i--;
             }
