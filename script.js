@@ -4,6 +4,7 @@ const startScreen = document.getElementById('start-screen');
 const gameOverScreen = document.getElementById('game-over-screen');
 const scoreDisplay = document.getElementById('score-display');
 const finalScoreDisplay = document.getElementById('final-score');
+const livesDisplay = document.getElementById('lives-display');
 
 // Estados do Jogo
 const STATE_START = 0;
@@ -13,6 +14,7 @@ const STATE_GAMEOVER = 2;
 let currentState = STATE_START;
 let frames = 0;
 let score = 0;
+let lives = 3;
 let animationId;
 
 // Objeto Passarinho
@@ -153,6 +155,135 @@ const pipes = {
     }
 };
 
+// Objeto Projéteis
+const projectiles = {
+    items: [],
+    width: 15,
+    height: 5,
+    speed: 8,
+
+    draw() {
+        ctx.fillStyle = '#e74c3c'; // Tiro Vermelho
+        for (let i = 0; i < this.items.length; i++) {
+            let p = this.items[i];
+            ctx.fillRect(p.x, p.y, this.width, this.height);
+            ctx.strokeStyle = '#000';
+            ctx.strokeRect(p.x, p.y, this.width, this.height);
+        }
+    },
+
+    update() {
+        for (let i = 0; i < this.items.length; i++) {
+            let p = this.items[i];
+            p.x += this.speed;
+
+            if (p.x > canvas.width) {
+                this.items.splice(i, 1);
+                i--;
+            }
+        }
+    },
+
+    shoot() {
+        this.items.push({
+            x: bird.x + bird.radius + 20,
+            y: bird.y + bird.radius
+        });
+    },
+
+    reset() {
+        this.items = [];
+    }
+};
+
+// Objeto Inimigos
+const enemies = {
+    items: [],
+    radius: 12,
+    speed: 4,
+
+    draw() {
+        for (let i = 0; i < this.items.length; i++) {
+            let e = this.items[i];
+            ctx.fillStyle = '#e74c3c'; // Pássaro Inimigo Vermelho
+            ctx.beginPath();
+            ctx.arc(e.x, e.y, this.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Olho
+            ctx.fillStyle = '#fff';
+            ctx.beginPath();
+            ctx.arc(e.x - 4, e.y - 4, 4, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#000';
+            ctx.beginPath();
+            ctx.arc(e.x - 5, e.y - 4, 2, 0, Math.PI * 2);
+            ctx.fill();
+        }
+    },
+
+    update() {
+        // Gera novos inimigos a cada 150 frames
+        if (frames % 150 === 0) {
+            this.items.push({
+                x: canvas.width + 20,
+                y: Math.random() * (canvas.height - 100) + 50
+            });
+        }
+
+        for (let i = 0; i < this.items.length; i++) {
+            let e = this.items[i];
+            e.x -= e.speed;
+
+            // Colisão com os tiros
+            let killed = false;
+            for (let j = 0; j < projectiles.items.length; j++) {
+                let p = projectiles.items[j];
+                let distX = Math.abs(e.x - p.x - projectiles.width / 2);
+                let distY = Math.abs(e.y - p.y - projectiles.height / 2);
+
+                if (distX <= (projectiles.width / 2 + this.radius) && distY <= (projectiles.height / 2 + this.radius)) {
+                    projectiles.items.splice(j, 1);
+                    this.items.splice(i, 1);
+                    i--;
+                    killed = true;
+                    break;
+                }
+            }
+            if (killed) continue;
+
+            // Colisão com o pássaro
+            let distX = Math.abs(e.x - (bird.x + bird.radius));
+            let distY = Math.abs(e.y - (bird.y + bird.radius));
+            let distance = Math.sqrt(distX * distX + distY * distY);
+
+            if (distance < bird.radius + this.radius) {
+                lives--;
+                livesDisplay.innerText = `Vidas: ${lives}`;
+                this.items.splice(i, 1);
+                i--;
+                if (lives <= 0) {
+                    gameOver();
+                }
+                continue;
+            }
+
+            // Remove inimigos fora da tela
+            if (e.x + this.radius < -10) {
+                this.items.splice(i, 1);
+                i--;
+            }
+        }
+    },
+
+    reset() {
+        this.items = [];
+    }
+};
+
 function draw() {
     // Fundo do céu
     ctx.fillStyle = '#70c5ce';
@@ -167,12 +298,16 @@ function draw() {
 
     // Desenha canos e pássaro
     pipes.draw();
+    projectiles.draw();
+    enemies.draw();
     bird.draw();
 }
 
 function update() {
     bird.update();
     pipes.update();
+    projectiles.update();
+    enemies.update();
 }
 
 function loop() {
@@ -189,12 +324,17 @@ function startGame() {
     startScreen.classList.add('hidden');
     gameOverScreen.classList.add('hidden');
     scoreDisplay.classList.remove('hidden');
+    livesDisplay.classList.remove('hidden');
     
     bird.reset();
     pipes.reset();
+    projectiles.reset();
+    enemies.reset();
     score = 0;
+    lives = 3;
     frames = 0;
     scoreDisplay.innerText = score;
+    livesDisplay.innerText = `Vidas: ${lives}`;
     
     loop();
 }
@@ -204,6 +344,7 @@ function gameOver() {
     cancelAnimationFrame(animationId);
     
     scoreDisplay.classList.add('hidden');
+    livesDisplay.classList.add('hidden');
     finalScoreDisplay.innerText = score;
     gameOverScreen.classList.remove('hidden');
 }
@@ -230,6 +371,7 @@ function handleInput() {
         startGame();
     } else if (currentState === STATE_PLAYING) {
         bird.flap();
+        projectiles.shoot();
     } else if (currentState === STATE_GAMEOVER) {
         startGame();
     }
