@@ -267,6 +267,13 @@ const enemies = {
             } else if (e.y > bird.y) {
                 e.y -= 1.5; // Vai subindo
             }
+            
+            // Limitar a altura do inimigo para ele nunca sair da tela
+            if (e.y < 0) {
+                e.y = 0;
+            } else if (e.y + this.radius > canvas.height) {
+                e.y = canvas.height - this.radius;
+            }
 
             // Colisão com os tiros
             let killed = false;
