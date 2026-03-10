@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flappy Clone</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="game-container">
+        <canvas id="gameCanvas" width="400" height="500"></canvas>
+        <div id="ui-layer">
+            <div id="start-screen" class="screen">
+                <h1>Flappy Clone</h1>
+                <p>Clique ou pressione Espaço para começar</p>
+            </div>
+            <div id="game-over-screen" class="screen hidden">
+                <h1>Game Over</h1>
+                <p>Pontuação: <span id="final-score">0</span></p>
+                <p>Clique ou pressione Espaço para reiniciar</p>
+            </div>
+            <div id="score-display" class="hidden">0</div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
