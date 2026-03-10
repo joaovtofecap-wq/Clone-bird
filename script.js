@@ -216,31 +216,31 @@ const enemies = {
         for (let i = 0; i < this.items.length; i++) {
             let e = this.items[i];
             
-            // Corpo do Pássaro Inimigo (igual ao player mas vermelho e virado pro outro lado)
-            ctx.fillStyle = '#e74c3c'; // Vermelho
+            // Corpo do Pássaro Inimigo (igual ao player mas vermelho puro e virado pro outro lado)
+            ctx.fillStyle = '#ff0000'; // Vermelho puro para destaque
             ctx.beginPath();
-            ctx.arc(e.x + this.radius, e.y + this.radius, this.radius, 0, Math.PI * 2);
+            ctx.arc(e.x, e.y, this.radius, 0, Math.PI * 2);
             ctx.fill();
             ctx.strokeStyle = '#000'; // Borda
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 3; // Linha mais grossa
             ctx.stroke();
             
             // Olho (virado para a esquerda)
             ctx.fillStyle = '#fff';
             ctx.beginPath();
-            ctx.arc(e.x + this.radius - 6, e.y + this.radius - 5, 5, 0, Math.PI * 2);
+            ctx.arc(e.x - 6, e.y - 5, 5, 0, Math.PI * 2);
             ctx.fill();
             ctx.fillStyle = '#eb2f06'; // Pupila vermelha pra dar aparência de mau
             ctx.beginPath();
-            ctx.arc(e.x + this.radius - 7, e.y + this.radius - 5, 2.5, 0, Math.PI * 2);
+            ctx.arc(e.x - 7, e.y - 5, 2.5, 0, Math.PI * 2);
             ctx.fill();
 
             // Bico (virado para a esquerda)
             ctx.fillStyle = '#e67e22';
             ctx.beginPath();
-            ctx.moveTo(e.x + this.radius - 10, e.y + this.radius);
-            ctx.lineTo(e.x + this.radius - 20, e.y + this.radius + 5);
-            ctx.lineTo(e.x + this.radius - 10, e.y + this.radius + 10);
+            ctx.moveTo(e.x - 10, e.y);
+            ctx.lineTo(e.x - 20, e.y + 5);
+            ctx.lineTo(e.x - 10, e.y + 10);
             ctx.fill();
             ctx.stroke();
         }
@@ -285,20 +285,27 @@ const enemies = {
 
             // Colisão com os tiros (Usando AABB Simples - Rect vs Rect)
             let killed = false;
-            let enemyLeft = e.x;
-            let enemyRight = e.x + (this.radius * 2);
-            let enemyTop = e.y;
-            let enemyBottom = e.y + (this.radius * 2);
 
             for (let j = 0; j < projectiles.items.length; j++) {
                 let p = projectiles.items[j];
-                let projLeft = p.x;
-                let projRight = p.x + projectiles.width;
-                let projTop = p.y;
-                let projBottom = p.y + projectiles.height;
 
-                // Checagem se um quadro está em cima do outro
-                if (projRight >= enemyLeft && projLeft <= enemyRight && projBottom >= enemyTop && projTop <= enemyBottom) {
+                // Distância do centro do círculo do inimigo até o retângulo do tiro
+                let testX = e.x;
+                let testY = e.y;
+
+                if (e.x < p.x) testX = p.x; // Borda esquerda do tiro
+                else if (e.x > p.x + projectiles.width) testX = p.x + projectiles.width; // Borda direita do tiro
+
+                if (e.y < p.y) testY = p.y; // Topo do tiro
+                else if (e.y > p.y + projectiles.height) testY = p.y + projectiles.height; // Fundo do tiro
+
+                // Pega a distância entre o inimigo e a borda mais próxima
+                let distX = e.x - testX;
+                let distY = e.y - testY;
+                let distance = Math.sqrt((distX * distX) + (distY * distY));
+
+                // Se a distância for menor que o raio, bateu!
+                if (distance <= this.radius) {
                     projectiles.items.splice(j, 1); // Destrói o tiro
                     j--; // Ajusta o index do loop de tiros pra não pular nenhum
                     e.hp--; // Diminui HP do inimigo
@@ -318,12 +325,15 @@ const enemies = {
             }
 
             // Colisão com o pássaro
-            let distX = Math.abs((e.x + this.radius) - (bird.x + bird.radius));
-            let distY = Math.abs((e.y + this.radius) - (bird.y + bird.radius));
-            let distance = Math.sqrt(distX * distX + distY * distY);
+            // Precisamos ajustar porque o desenho do pássaro tem o '.x' no canto superior esquerdo para manter a compatibilidade do arc (que usa o +this.radius no draw do player)
+            let playerCenterX = bird.x + bird.radius;
+            let playerCenterY = bird.y + bird.radius;
+            
+            let distXPlayer = Math.abs(e.x - playerCenterX);
+            let distYPlayer = Math.abs(e.y - playerCenterY);
+            let distancePlayer = Math.sqrt(distXPlayer * distXPlayer + distYPlayer * distYPlayer);
 
-            // Reduzi o raio de colisão só por segurança pra não ser injusto
-            if (distance < bird.radius + this.radius - 5) {
+            if (distancePlayer < bird.radius + this.radius - 5) {
                 lives--;
                 livesDisplay.innerText = `Vidas: ${lives}`;
                 this.items.splice(i, 1);
