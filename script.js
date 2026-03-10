@@ -144,6 +144,11 @@ const pipes = {
                 
                 // Aumenta a velocidade a cada 20 pontos
                 speedMultiplier = 1 + Math.floor(score / 20) * 0.2; // Aumenta 20% da velocidade a cada 20 pts
+
+                // CONDIÇÃO DE VITÓRIA
+                if (score >= 200) {
+                    gameWin();
+                }
             }
 
             // Remove canos que saíram da tela
@@ -241,12 +246,15 @@ const enemies = {
     },
 
     update() {
-        // Gera novos inimigos mais frequentemente conforme a velocidade aumenta
-        if (frames % Math.max(60, Math.floor(150 / speedMultiplier)) === 0) {
-            this.items.push({
-                x: canvas.width + 20,
-                y: Math.random() * (canvas.height - 100) + 50
-            });
+        // Gera novos inimigos apenas se a pontuação for maior ou igual a 10
+        if (score >= 10) {
+            if (frames % Math.max(60, Math.floor(150 / speedMultiplier)) === 0) {
+                this.items.push({
+                    x: canvas.width + 20,
+                    y: Math.random() * (canvas.height - 100) + 50,
+                    hp: 1 // Morre com 1 tiro
+                });
+            }
         }
 
         for (let i = 0; i < this.items.length; i++) {
@@ -268,10 +276,14 @@ const enemies = {
                 let distY = Math.abs(e.y - p.y - projectiles.height / 2);
 
                 if (distX <= (projectiles.width / 2 + this.radius) && distY <= (projectiles.height / 2 + this.radius)) {
-                    projectiles.items.splice(j, 1);
-                    this.items.splice(i, 1);
-                    i--;
-                    killed = true;
+                    projectiles.items.splice(j, 1); // Destrói o tiro
+                    e.hp--; // Diminui HP do inimigo
+                    
+                    if (e.hp <= 0) {
+                        this.items.splice(i, 1); // Destrói inimigo
+                        i--;
+                        killed = true;
+                    }
                     break;
                 }
             }
@@ -369,6 +381,21 @@ function gameOver() {
     
     scoreDisplay.classList.add('hidden');
     livesDisplay.classList.add('hidden');
+    document.querySelector('#game-over-screen h1').innerText = "Game Over";
+    document.querySelector('#game-over-screen h1').style.color = "#f1c40f";
+    finalScoreDisplay.innerText = score;
+    gameOverScreen.classList.remove('hidden');
+}
+
+function gameWin() {
+    currentState = STATE_GAMEOVER;
+    cancelAnimationFrame(animationId);
+    
+    scoreDisplay.classList.add('hidden');
+    livesDisplay.classList.add('hidden');
+    // Reutiliza a tela de game over mas com texto de vitória
+    document.querySelector('#game-over-screen h1').innerText = "VOCÊ VENCEU!";
+    document.querySelector('#game-over-screen h1').style.color = "#2ecc71"; // Verde ao jogar
     finalScoreDisplay.innerText = score;
     gameOverScreen.classList.remove('hidden');
 }
